@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SEHAT CareSync Demo</title>
+<style>
+:root{--page:#f6eef2;--surface:#fff;--text:#2a1020;--muted:#6b5562;--line:#e3d3dc;--brand:#54223F;--navy:#121A5C;--lime:#c8f04a;--btn:#54223F;--btnfg:#fff;--ok:#0b6b3a;--warn:#9a5b00;color-scheme:light;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--page:#1c0d16;--surface:#2b1522;--text:#f6eef2;--muted:#c9b3c0;--line:#4a2a3d;--btn:#c8f04a;--btnfg:#1c0d16;--ok:#7be0a3;--warn:#ffc266;color-scheme:dark}}
+:root[data-theme="dark"]{--page:#1c0d16;--surface:#2b1522;--text:#f6eef2;--muted:#c9b3c0;--line:#4a2a3d;--btn:#c8f04a;--btnfg:#1c0d16;--ok:#7be0a3;--warn:#ffc266;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--text);font:17px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+.wrap{max-width:480px;margin:0 auto;min-height:100vh;background:var(--page)}
+header{background:#54223F;color:#fff;padding:16px 16px 12px}
+header h1{margin:0;font-size:22px}header p{margin:2px 0 10px;font-size:14px;opacity:.85}
+label.v{font-size:13px;opacity:.9;display:block;margin-bottom:4px}
+select,input{width:100%;font:inherit;padding:12px;border-radius:10px;border:2px solid var(--line);background:var(--surface);color:var(--text)}
+nav{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:10px 12px;background:var(--surface);border-bottom:1px solid var(--line)}
+nav button{padding:12px 4px;font-size:15px;border-radius:10px;border:2px solid var(--line);background:transparent;color:var(--text);font-weight:600}
+nav button[aria-current="page"]{background:var(--btn);color:var(--btnfg);border-color:var(--btn)}
+main{padding:14px 12px 30px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.card h2{margin:0 0 6px;font-size:18px}h3{margin:14px 0 6px;font-size:16px}
+.muted{color:var(--muted);font-size:14px}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.row button{flex:1;min-width:92px}
+button{font:inherit;font-weight:600;padding:13px 10px;border-radius:12px;border:2px solid var(--btn);background:transparent;color:var(--text);cursor:pointer}
+button.pri,button[aria-pressed="true"]{background:var(--btn);color:var(--btnfg)}
+.badge{display:inline-block;font-size:13px;padding:3px 9px;border-radius:99px;border:1px solid var(--line);margin-top:4px}
+.badge.ok{color:var(--ok);border-color:var(--ok)}.badge.wait{color:var(--warn);border-color:var(--warn)}
+.big{font-size:30px;font-weight:700}
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}.stats div{background:var(--page);border-radius:10px;padding:10px;text-align:center}.stats small{display:block;color:var(--muted);font-size:12px}
+.tl{list-style:none;padding:0;margin:0}.tl li{border-left:3px solid var(--btn);padding:2px 0 12px 12px;margin-left:6px}.tl b{display:block}
+.sw{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}.sw input{width:26px;height:26px}
+.lock{text-align:center;padding:26px 10px}
+.code{font-size:28px;letter-spacing:3px;font-weight:800;text-align:center;padding:10px;background:var(--page);border-radius:10px;margin:8px 0}
+.foot{font-size:13px;color:var(--muted);text-align:center;padding:6px 14px 24px}
+.msg{padding:10px;border-radius:10px;background:var(--page);margin-top:10px;font-weight:600}
+</style></head><body><div class="wrap">
+<header><h1>SEHAT &middot; CareSync</h1><p>Daily medication and vitals, shared with consent</p>
+<label class="v" for="who">Demo: view the app as</label>
+<select id="who"><option>Aiman (Patient)</option><option>Siti (Caregiver, daughter)</option><option>Hakim (Caregiver, son)</option></select></header>
+<nav id="nav"></nav><main id="app"></main>
+<div class="foot">Fictional demo data only. Not medical advice and not clinically validated. In an emergency, call 999.</div></div>
+<script>
+var meds=[{n:"Metformin",d:"500 mg, with breakfast",s:null,r:"Reviewed",by:"Pharm. Aisyah",dt:"12 Oct 2026"},
+{n:"Amlodipine",d:"5 mg, morning",s:null,r:"Reviewed",by:"Pharm. Aisyah",dt:"12 Oct 2026"},
+{n:"Atorvastatin",d:"20 mg, night",s:null,r:"Reviewed",by:"Pharm. Aisyah",dt:"12 Oct 2026"}];
+var log=[{t:"7:50 AM",w:"Aiman",x:"Logged glucose 6.2 mmol/L",k:"vitals"},{t:"7:45 AM",w:"Aiman",x:"Logged blood pressure 130/80 mmHg",k:"vitals"}];
+var vit={bp:"130/80",glu:"6.2",hr:"78"};
+var cg=[{n:"Siti",rel:"daughter",meds:true,vitals:true},{n:"Hakim",rel:"son",meds:true,vitals:false}];
+var tab="today",viewer="Aiman",invite=null,msg="";
+var STAT=[["Taken","\u2713"],["Skipped","\u2715"],["Not sure","?"]];
+function now(){return new Date().toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}
+function add(x,k){log.unshift({t:now(),w:viewer,x:x,k:k})}
+function me(){return cg.filter(function(c){return c.n===viewer})[0]}
+function isP(){return viewer==="Aiman"}
+function can(k){return isP()||(me()&&me()[k])}
+function lockBox(who){return '<div class="card lock"><div class="big">\uD83D\uDD12</div><b>Aiman has not shared this with you</b><p class="muted">Only the patient decides what each caregiver can see. Switch to Aiman to change it.</p></div>'}
+function medCard(m,i){
+ var h='<div class="card"><h2>'+m.n+'</h2><div class="muted">'+m.d+'</div>';
+ h+=m.r==="Reviewed"?'<span class="badge ok">\u2713 Reviewed &middot; '+m.by+' &middot; '+m.dt+'</span>':'<span class="badge wait">\u23F3 Awaiting review &middot; Self-entered</span>';
+ if(isP()){h+='<div class="row">'+STAT.map(function(s){return '<button data-a="st" data-i="'+i+'" data-v="'+s[0]+'" aria-pressed="'+(m.s===s[0])+'">'+s[1]+" "+s[0]+'</button>'}).join("")+'</div>';
+  if(m.r!=="Reviewed")h+='<div class="row"><button data-a="rev" data-i="'+i+'">Demo: clinician marks as reviewed</button></div>'}
+ else h+='<div class="msg">Status today: '+(m.s?m.s:"Not recorded yet")+'</div>';
+ return h+'</div>'}
+function today(){
+ if(!can("meds"))return lockBox();
+ var done=meds.filter(function(m){return m.s==="Taken"}).length;
+ var h='<div class="card"><h2>Today, 28 Oct 2026</h2><div class="muted">'+(isP()?"Hello, Aiman":"Aiman\u2019s care today")+'</div><div class="big">'+done+' of '+meds.length+' taken</div></div>';
+ meds.forEach(function(m,i){h+=medCard(m,i)});
+ if(isP())h+='<div class="card"><h2>Add a medication</h2><input id="mn" placeholder="Medication name" aria-label="Medication name"><div class="row"><button class="pri" data-a="addmed">Add (goes to clinician review)</button></div></div>';
+ return h}
+function rng(){var p=vit.bp.split("/"),g=parseFloat(vit.glu),o=[];
+ if(+p[0]>=140||+p[1]>=90)o.push("Blood pressure is higher than usual");
+ if(g>10)o.push("Glucose is higher than usual");if(g<4)o.push("Glucose is lower than usual");
+ return o.length?o.join(". ")+". Talk to your clinician. (Demo ranges only.)":"Latest readings are within the demo\u2019s usual range."}
+function vitals(){
+ if(!can("vitals"))return lockBox();
+ var h='<div class="card"><h2>Latest readings</h2><div class="stats"><div><b>'+vit.bp+'</b><small>BP mmHg</small></div><div><b>'+vit.glu+'</b><small>Glucose mmol/L</small></div><div><b>'+vit.hr+'</b><small>Heart rate bpm</small></div></div><div class="msg">'+rng()+'</div></div>';
+ if(isP())h+='<div class="card"><h2>Record a reading</h2><label for="sy">Blood pressure (top / bottom)</label><div class="row"><input id="sy" inputmode="numeric" placeholder="e.g. 130"><input id="di" inputmode="numeric" placeholder="e.g. 80"></div><label for="gl">Glucose (mmol/L)</label><input id="gl" inputmode="decimal" placeholder="e.g. 6.2"><label for="hr">Heart rate (bpm)</label><input id="hr" inputmode="numeric" placeholder="e.g. 78"><div class="row"><button class="pri" data-a="save">Save reading</button></div>'+(msg?'<div class="msg">'+msg+'</div>':"")+'</div>';
+ return h}
+function family(){
+ if(!isP()){var c=me();return '<div class="card"><h2>Your access</h2><p>Aiman has shared with you:</p><ul><li>Medications: <b>'+(c.meds?"Yes":"No")+'</b></li><li>Vitals: <b>'+(c.vitals?"Yes":"No")+'</b></li></ul><p class="muted">Aiman can change this at any time.</p></div>'}
+ var h='<div class="card"><h2>Who can see what</h2><div class="muted">You choose for each person. Revoke at any time.</div>';
+ cg.forEach(function(c,i){h+='<h3>'+c.n+' ('+c.rel+')</h3><label class="sw"><input type="checkbox" data-a="tg" data-i="'+i+'" data-k="meds"'+(c.meds?" checked":"")+'> Medications</label><label class="sw"><input type="checkbox" data-a="tg" data-i="'+i+'" data-k="vitals"'+(c.vitals?" checked":"")+'> Vitals</label><div class="row"><button data-a="rv" data-i="'+i+'">Revoke all access</button></div>'});
+ h+='</div><div class="card"><h2>Invite a family member</h2>';
+ if(!invite)h+='<div class="row"><button class="pri" data-a="inv">Create secure invite code</button></div>';
+ else h+='<p class="muted">Share this one-time code with your family member:</p><div class="code">'+invite+'</div><div class="row"><button data-a="join">Demo: family member enters the code</button></div>';
+ return h+'</div>'}
+function timeline(){
+ var L=log.filter(function(e){return isP()||e.k==="consent"&&false||can(e.k==="med"?"meds":e.k==="vitals"?"vitals":"x")});
+ var h='<div class="card"><h2>Shared timeline</h2><div class="muted">Who logged each event, with the time.'+(isP()?"":" You only see what Aiman shared.")+'</div></div><div class="card"><ul class="tl">';
+ if(!L.length)h+='<li>Nothing shared with you yet.</li>';
+ L.forEach(function(e){h+='<li><b>'+e.x+'</b><span class="muted">'+e.t+' &middot; logged by '+e.w+'</span></li>'});
+ return h+'</ul></div>'}
+function render(){
+ var T=[["today","Today"],["vitals","Vitals"],["family","Family"],["timeline","Timeline"]];
+ document.getElementById("nav").innerHTML=T.map(function(t){return '<button data-a="tab" data-v="'+t[0]+'"'+(tab===t[0]?' aria-current="page"':"")+'>'+t[1]+'</button>'}).join("");
+ document.getElementById("app").innerHTML={today:today,vitals:vitals,family:family,timeline:timeline}[tab]()}
+document.getElementById("who").onchange=function(e){viewer=e.target.value.split(" ")[0];tab="today";msg="";render()};
+document.addEventListener("click",function(e){var b=e.target.closest("[data-a]");if(!b||b.type==="checkbox")return;var a=b.dataset.a,i=+b.dataset.i;
+ if(a==="tab"){tab=b.dataset.v;msg=""}
+ else if(a==="st"){meds[i].s=b.dataset.v;add(meds[i].n+": "+b.dataset.v,"med")}
+ else if(a==="rev"){meds[i].r="Reviewed";meds[i].by="Dr. Farah";meds[i].dt="28 Oct 2026";add(meds[i].n+" reviewed by clinician","med")}
+ else if(a==="addmed"){var v=document.getElementById("mn").value.trim();if(v){meds.push({n:v,d:"Added by patient",s:null,r:"Awaiting",by:"",dt:""});add("Added medication: "+v+" (awaiting review)","med")}}
+ else if(a==="save"){var sy=+document.getElementById("sy").value,di=+document.getElementById("di").value,g=document.getElementById("gl").value,hr=document.getElementById("hr").value;
+  if(sy>0&&di>0&&g&&hr){vit={bp:sy+"/"+di,glu:g,hr:hr};add("Logged BP "+vit.bp+", glucose "+g+" mmol/L, heart rate "+hr+" bpm","vitals");msg="Saved. Caregivers with access can now see it."}else msg="Please fill in all four boxes."}
+ else if(a==="rv"){cg[i].meds=false;cg[i].vitals=false}
+ else if(a==="inv"){invite="SEHAT-"+(1000+Math.floor(Math.random()*9000))}
+ else if(a==="join"){cg.push({n:"Aini",rel:"sister",meds:false,vitals:false});invite=null}
+ render()});
+document.addEventListener("change",function(e){var t=e.target;if(t.dataset&&t.dataset.a==="tg"){cg[+t.dataset.i][t.dataset.k]=t.checked;render()}});
+render();
+</script></body></html>
